@@ -100,7 +100,7 @@ int main() {
                 verifierEtatOccupation();
                 break;
             case 6:
-                printf("Quitter le programme.\n");
+                printf("Vous avez quitté le programme.\n");
                 break;
             default:
                 printf("Choix invalide. Veuillez reessayer.\n");
