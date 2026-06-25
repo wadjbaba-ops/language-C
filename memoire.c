@@ -41,30 +41,56 @@ void allouerMemoire(int process[2]) {
     printf("%d Mo alloues au processus %d\n", process[1], process[0]);
 }
 //fonction pour liberer de la memoire d'un processus
-void libererMemoire(int valeur) {
-    //on traque la memoire liberee
-    int lib = 0;
-    //on demande la valeur de memoire à liberer
-    printf("Entrez la valeur a liberer: ");
-    scanf("%d", &valeur);
-    //control de saisie pour s'assurer que la valeur de memoire est positive et ne depasse pas la memoire totale moins la memoire disponible
-    while (valeur <= 0 || valeur > MEMOIRE - memoireDisponible) {
-        printf("Erreur: la valeur saisie est invalide.\n");
-        printf("Veuillez entrer une valeur positive inferieure ou egale a %d: ", MEMOIRE - memoireDisponible);
+void libererMemoire(int valeur, int process[2]) {
+    printf("Liberation globale ou locale de memoire?\n");
+    char choice;
+    printf("Entrez 'g' pour globale ou 'l' pour locale: ");
+    scanf(" %c", &choice);
+    if (choice == 'g') {
+        // liberation globale
+        //on traque la memoire liberee
+        int lib = 0;
+        //on demande la valeur de memoire à liberer
+        printf("Entrez la valeur a liberer: ");
         scanf("%d", &valeur);
-    }
-    //on liere 1 Mo pour chaque processus repetitivement jusqu'à ce que la valeur totale soit libérée
-    while (lib < valeur) {
-        for (int i = 0; i < 10; i++) {
-            if (processes[i] > 0) {
-                if (lib < valeur) {
-                    processes[i]--;
-                    lib++;
-                } else {
-                    break;
+        //control de saisie pour s'assurer que la valeur de memoire est positive et ne depasse pas la memoire totale moins la memoire disponible
+        while (valeur <= 0 || valeur > MEMOIRE - memoireDisponible) {
+            printf("Erreur: la valeur saisie est invalide.\n");
+            printf("Veuillez entrer une valeur positive inferieure ou egale a %d: ", MEMOIRE - memoireDisponible);
+            scanf("%d", &valeur);
+        }
+        //on libere 1 Mo pour chaque processus repetitivement jusqu'à ce que la valeur totale soit libérée
+        while (lib < valeur) {
+            for (int i = 0; i < 10; i++) {
+                if (processes[i] > 0) {
+                    if (lib < valeur) {
+                        processes[i]--;
+                        lib++;
+                    } else {
+                        break;
+                    }
                 }
             }
         }
+    } else if (choice == 'l') {
+        // liberation locale
+        //on demande le numero du processus auquel on veut liberer de la memoire
+        printf("Entrez le numero du processus (0-9): ");
+        scanf("%d", &process[0]);
+        //on demande la valeur de memoire à liberer
+        printf("Entrez la valeur a liberer: ");
+        scanf("%d", &valeur);
+        //control de saisie pour s'assurer que la valeur de memoire est positive et ne depasse pas la memoire utilisee par le processus
+        while (valeur <= 0 || valeur > processes[process[0]]) {
+            printf("Erreur: la valeur saisie est invalide.\n");
+            printf("Veuillez entrer une valeur positive inferieure ou egale a %d: ", processes[process[0]]);
+            scanf("%d", &valeur);
+        }
+        //on libere la memoire du processus
+        processes[process[0]] -= valeur;
+    } else {
+        printf("Choix invalide.\n");
+        return;
     }
     //on met à jour la memoire disponible après la liberation
     memoireDisponible += valeur;
@@ -81,7 +107,15 @@ void afficherMemoireDisponible() {
 }
 //fonction pour verifier l'etat d'occupation de la memoire
 void verifierEtatOccupation() {
-    printf("Etat d'occupation de la memoire:\n");
+    //pourcentage d'occupation de la memoire
+    int occupation = ((MEMOIRE - memoireDisponible) * 100) / MEMOIRE;
+    if (occupation <= 70) {
+        printf("Etat d'occupation: normal\n");
+    } else if (occupation < 90) {
+        printf("Etat d'occupation: eleve\n");
+    } else {
+        printf("Etat d'occupation: critique\n");
+    }
     for (int i = 0; i < 10; i++) {
         //on affiche uniquement les processus qui utilisent de la memoire
         if (processes[i] > 0) {
@@ -106,7 +140,7 @@ int main() {
                 allouerMemoire(process);
                 break;
             case 2:
-                libererMemoire(valeur);
+                libererMemoire(valeur, process);
                 break;
             case 3:
                 afficherMemoireUtilisee();
